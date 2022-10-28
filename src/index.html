@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Allrede - Painel Operacional - Ordens Serviço</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"
+        integrity="sha512-VJ6+sp2E5rFQk05caiXXzQd1wBABpjEj1r5kMiLmGAAgwPItw1YpqsCCBtq8Yr1x6C49/mTpRdXtq8O2RcZhlQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.2.0/anime.js"></script>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-dark bg-dark">
+            <!-- <div>
+                
+            </div> -->
+            <div id="containerAlert" class="alert alert-danger nav-items">
+                <!-- <span class="alert alert-danger nav-items" id="lblStatusConexao">Desconectado</span> -->
+                <span id="lblStatusConexao">Desconectado</span>
+                <img id="gifLoading" hidden style="width: 25px;" src="/ar-operational-panel-client/src/ajax-loader.gif">
+            </div>
+            <div>
+                <select hidden class="nav-items nav-components" id="typeOS">
+                    <option>Comercial</option>
+                    <option>CRM</option>
+                </select>
+                <input class="nav-items nav-components" type="date" name="dateStart" id="dateStart" value="2022-10-20">
+                <button type="button" class="btn btn-primary nav-items" style="float: right;"
+                    onclick="conectar(this)">Conectar</button>
+            </div>
+        </nav>
+    </header>
+    <div class="container-fluid">
+        <div id="container-cards" style="display:flex; flex-wrap:wrap; padding:5px; margin:5px;"></div>
+    </div>
+    <dialog id="modalConfigs">
+        <div class="card m-1" data-type="card"  style="min-width: 19%; max-width: 100%; flex: 1;">
+            <div class="card-header">
+                <h2>Configurações de Vagas</h2>
+            </div>
+            <div class="card-body p-2">
+                <div class="card-group">
+                    afasdfa
+                    valueAsDatefasf
+                    afasdfaasf
+                    asdf
+                    asdf
+                    afasdfaasdf
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="button" class="btn btn-primary nav-items" style="float: right;">Cancelar</button>
+                <button type="button" class="btn btn-primary nav-items" style="float: right;">Salvar</button>
+            </div>
+        </div>
+    </dialog>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        var socket;
+        var lblStatusConexao;
+        var cboRegional;
+        var containerCards;
+        var containerAlert;
+        var dateQuery;
+        var typeOS;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            lblStatusConexao = document.getElementById('lblStatusConexao');
+            cboRegional = document.getElementById('cboRegional');
+            containerCards = document.getElementById("container-cards");
+            containerAlert = document.getElementById("containerAlert");
+            dateQuery = document.getElementById("dateStart");
+            typeOS = document.getElementById("typeOS");
+
+            //#region Populando datepicker
+            var date = new Date();
+            var dateStr = [date.getFullYear(),
+            (date.getMonth()+1).toString().padStart(2, '0'), //o getMonth tem indice 0, portanto, precisa incrementar +1 para obter o mês correto.
+            date.getDate().toString().padStart(2, '0')].join('-');
+            dateQuery.value = dateStr;
+            //#endregion
+        });
+        async function animateCards() {
+            anime({
+                targets: containerCards,
+                scale: [{ value: 1 }, { value: 1.1 }, { value: 1, delay: 250 }],
+                //rotateY: { value: '+=360', delay: 200 },
+                easing: 'easeInOutSine',
+                duration: 400,
+            });
+            await sleep(100);
+            var a = document.querySelectorAll("[data-type='card']");
+            for (const element of a) {
+                await sleep(85);
+                anime({
+                    targets: element,
+                    //scale: [{ value: 1 }, { value: 1.1 }, { value: 1, delay: 250 }],
+                    rotateY: { value: '+=360', delay: 200 },
+                    easing: 'easeInOutSine',
+                    duration: 250,
+                    //endDelay: 1000,
+                    // complete: function (anim) {
+                    //     playing = false;
+                    // }
+                });
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+        function conectar(_this) {
+            if (!socket) {
+                if (!dateQuery.valueAsDate) {
+                    alert('Favor selecionar uma data válida para iniciar!');
+                    return;
+                }
+                //O input type="date", usa o fuso GMT, por isso a data sempre fica com menos 1 dia, portanto, precisa forçar o uso do UTC para conseguir usar a data selecionada
+                var utcDateString = [dateQuery.valueAsDate.getUTCFullYear(),
+                        (dateQuery.valueAsDate.getUTCMonth()+1).toString().padStart(2, '0'), //o getMonth tem indice 0, portanto, precisa incrementar +1 para obter o mês correto.
+                        dateQuery.valueAsDate.getUTCDate().toString().padStart(2, '0')].join('-');
+
+                socket = io.connect("http://localhost:5555/", {
+                    query: {
+                        dateQuery: utcDateString,
+                        osType: typeOS.value
+                    },
+                    auth: { token: 'q1w2e3r4t5' }
+                });
+                socket.on('refreshData', (dados) => {
+                    try {
+                        var a = typeOS.value;
+                        var c = typeOS.options[typeOS.selectedIndex].text;
+                        const b = dados.data.filter(x => x.grupo_os == typeOS.value);
+
+                        // const tipoOSDados = dados.data.reduce((grupo, registro) => {
+                        //     const { grupo_os } = registro;
+                        //     grupo[grupo_os] = grupo[grupo_os] ?? [];
+                        //     grupo[grupo_os].push(registro);
+                        //     return grupo;
+                        // }, {});
+                        const regionaisAgrupado = dados.data.reduce((grupo, registro) => {
+                            const { regiao } = registro;
+                            grupo[regiao] = grupo[regiao] ?? [];
+                            grupo[regiao].push(registro);
+                            return grupo;
+                        }, {});
+                        // const regionaisAgrupado = b.reduce((grupo, registro) => {
+                        //     const { regiao } = registro;
+                        //     grupo[regiao] = grupo[regiao] ?? [];
+                        //     grupo[regiao].push(registro);
+                        //     return grupo;
+                        // }, {});
+                        console.log(regionaisAgrupado);
+                        renderCards(regionaisAgrupado);
+                        updateStatus();
+                    }
+                    catch (err) {
+                        alert(err);
+                    }
+                });
+                var dt = new Date();//Nesse ponto, converter a data atual para o mesmo formato usado no utcDateString, para poder comparar se a data Selecionada é a do dia atual
+                var todayString = [dt.getFullYear(),
+                                    (dt.getMonth()+1).toString().padStart(2, '0'), //o getMonth tem indice 0, portanto, precisa incrementar +1 para obter o mês correto.
+                                    dt.getDate().toString().padStart(2, '0')].join('-');
+
+                if(todayString == utcDateString){
+                    document.body.style.backgroundColor = "#601c70";
+                }
+                else{
+                    document.body.style.backgroundColor = "#f7a600";
+                }
+                _this.innerText = "Desconectar";
+                dateQuery.disabled = true;
+                typeOS.disabled = true;
+                updateStatus(true);
+            }
+            else {
+                socket.disconnect(true);
+                socket = undefined;
+                _this.innerText = "Conectar";
+                dateQuery.disabled = false;
+                typeOS.disabled = false;
+                updateStatus();
+                containerCards.innerHTML = "";
+            }
+        }
+        async function updateStatus(first) {
+            if (socket) {
+                var dt = new Date();
+                containerAlert.className = containerAlert.className.replace('danger', 'success');
+                lblStatusConexao.innerText = (first ? `Conectado. Aguardando dados!!!` : `Conectado. Ultima atualização: ${dt.toLocaleDateString()} ${dt.toLocaleTimeString()}`)
+                document.getElementById("gifLoading").hidden = false;
+                animateCards();
+            }
+            else {
+                containerAlert.className = containerAlert.className.replace('success', 'danger');
+                lblStatusConexao.innerText = "Desconectado";
+                document.getElementById("gifLoading").hidden = true;
+            }
+
+        }
+        function renderCards(listaDados) {
+            // var cardsHoje = document.getElementById("container-cards");
+            containerCards.innerHTML = "";
+            Object.entries(listaDados).forEach(regional => {
+                console.log(regional);
+                var cardRegional = getCardRegional(regional);
+                console.log(cardRegional);
+                containerCards.innerHTML += cardRegional;
+            });
+        }
+        function getCardRegional(dadosRegional) {
+            const groupedDate = dadosRegional[1].reduce((dataAgrupada, registro) => {
+                const { data_programada } = registro;
+                dataAgrupada[data_programada] = dataAgrupada[data_programada] ?? [];
+                dataAgrupada[data_programada].push(registro);
+                return dataAgrupada;
+            }, {});
+
+            //<div class="card mb-3"  style="min-width: 28rem; max-width: 28rem; flex: 1;">
+            var ret =
+                `
+            <div class="card m-1" data-type="card"  style="min-width: 19%; max-width: 100%; flex: 1;">
+                <div class="card-header">
+                    <h2>${dadosRegional[0]}</h2>
+                </div>
+                <div class="card-body p-2">
+                    <div class="card-group">
+                        ${getCardsDate(groupedDate)}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <!--<button type="button" onclick="openConfig">-->
+                        <img class="btnConfig" onclick="openConfig()" src="/ar-operational-panel-client/src/config-ico.png">
+                        <!--</button>-->
+                    <!--<p class="card-text">Configurações<small class="text-muted"></small></p>-->
+                </div>
+            </div>
+            `
+
+            console.log(ret);
+            return ret;
+        }
+        function openConfig(){
+            document.getElementById("modalConfigs").showModal();
+        }
+        function getCardsDate(turnos) {
+            let returnString = "";
+            Object.entries(turnos).forEach(item => {
+                returnString +=
+                    `<div class="card mb-3">
+                    <div class="card-header"><h5>${item[0]}</h5></div>
+                    <div class="card-body">
+                `
+                Object.entries(item[1]).forEach(itemTurno => {
+                    const percentage = (parseInt(itemTurno[1].quantidade_os) / parseInt(itemTurno[1].vagas)) * 100;
+                    let percentageConf = 'bg-success';
+                    if (percentage > 85) {
+                        percentageConf = 'bg-danger';
+                    }
+                    else {
+                        if (percentage > 50) {
+                            percentageConf = 'bg-warning';
+                        } else {
+                            percentageConf = 'bg-success';
+                        }
+                    }
+                    returnString += `<h6 class="card-title">${itemTurno[1].grupo_os}(${itemTurno[1].quantidade_os}/${itemTurno[1].vagas})</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar ${percentageConf}" role="progressbar" style="width: ${percentage}%" aria-valuenow="${itemTurno[1].quantidade_os}" aria-valuemin="0"
+                                            aria-valuemax="${itemTurno[1].vagas}">
+                                        </div>
+                                    </div>`
+                })
+                returnString += `</div>`//fecha o card-body
+                returnString += `</div>`//Fecha o card
+            })
+
+            return returnString;
+        }
+
+        //#region Dados
+        //endregion
+    </script>
+</body>
+
+</html>
