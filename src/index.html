@@ -100,7 +100,6 @@
             anime({
                 targets: containerCards,
                 scale: [{ value: 1 }, { value: 1.1 }, { value: 1, delay: 250 }],
-                //rotateY: { value: '+=360', delay: 200 },
                 easing: 'easeInOutSine',
                 duration: 400,
             });
@@ -110,14 +109,9 @@
                 await sleep(85);
                 anime({
                     targets: element,
-                    //scale: [{ value: 1 }, { value: 1.1 }, { value: 1, delay: 250 }],
                     rotateY: { value: '+=360', delay: 200 },
                     easing: 'easeInOutSine',
-                    duration: 250,
-                    //endDelay: 1000,
-                    // complete: function (anim) {
-                    //     playing = false;
-                    // }
+                    duration: 250
                 });
             }
         }
